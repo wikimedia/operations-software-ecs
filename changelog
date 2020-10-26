@@ -1,0 +1,5 @@
+ecs (1.6.0-1) wikimedia; urgency=medium
+
+  * Initial release based on ECS 1.6.0.
+
+ -- Cole White <cwhite@wikimedia.org>  Thu, 22 Oct 2020 09:41:56 -0600

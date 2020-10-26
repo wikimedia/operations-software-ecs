@@ -1,0 +1,10 @@
+[[downloads]]
+== Downloads
+
+* link:ecs/ecs.yml[Intermediate YAML Schema]
+* link:ecs/ecs_flat.yml[Flattened YAML Schema]
+* link:ecs/ecs_nested.yml[Nested YAML Schema]
+* link:csv/fields.csv[Fields CSV]
+* link:beats/fields.ecs.yml[Beats YAML]
+* link:elasticsearch/6/template.json[Elasticsearch 6 Template]
+* link:elasticsearch/7/template.json[Elasticsearch 7 Template]

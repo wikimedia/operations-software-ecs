@@ -1,0 +1,13 @@
+diff --git a/scripts/generator.py b/scripts/generator.py
+index b7ae2a4..b001a09 100644
+--- a/scripts/generator.py
++++ b/scripts/generator.py
+@@ -52,8 +52,6 @@ def main():
+     csv_generator.generate(flat, ecs_version, out_dir)
+     es_template.generate(flat, ecs_version, out_dir, args.template_settings, args.mapping_settings)
+     beats.generate(nested, ecs_version, out_dir)
+-    if args.include or args.subset:
+-        exit()
+ 
+     asciidoc_fields.generate(nested, ecs_version, docs_dir)
+ 

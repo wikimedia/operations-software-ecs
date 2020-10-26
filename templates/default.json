@@ -1,0 +1,35 @@
+{
+    "index_patterns": ["ecs-*"],
+    "order": 1,
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "default": {
+            "type": "standard",
+            "stopwords": "_none_"
+          }
+        }
+      },
+      "index": {
+        "mapping": {
+          "total_fields": {
+            "limit": 2048
+          }
+        },
+        "query": {
+          "default_field": "message"
+        },
+        "refresh_interval": "5s",
+        "routing": {
+          "allocation": {
+            "require": {
+              "disktype": "ssd"
+            }
+          }
+        }
+      },
+      "number_of_shards": 1,
+      "number_of_replicas": 2
+    },
+    "mappings": {}
+}
