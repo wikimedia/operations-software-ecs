@@ -1,0 +1,26 @@
+---
+- name: http
+  fields:
+    - name: request.headers
+      level: custom
+      type: object
+      object_type: keyword
+      example: "{\"content-type\": \"application/json\", \"cache-status\": \"Miss\"}"
+      short: Custom key/value pairs.
+      description: >
+        Request headers in key/value pairs.
+
+        Can be used add request header information to events. Should not contain nested
+        objects. All values are stored as keyword.
+
+    - name: response.headers
+      level: custom
+      type: object
+      object_type: keyword
+      example: "{\"content-type\": \"application/json\", \"cache-status\": \"Miss\"}"
+      short: Custom key/value pairs.
+      description: >
+        Response headers in key/value pairs.
+
+        Can be used add response header information to events. Should not contain nested
+        objects. All values are stored as keyword.
