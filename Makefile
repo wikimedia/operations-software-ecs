@@ -2,7 +2,7 @@
 SHELL=/bin/bash
 
 UPSTREAM_REPO=https://github.com/elastic/ecs.git
-UPSTREAM_BRANCH=v1.6.0
+UPSTREAM_BRANCH=v1.7.0
 
 all: clean configure build
 	cp -R build/generated dist
@@ -21,7 +21,7 @@ configure:
 
 build:
 	cd build \
-	&& python3 scripts/generator.py --include "../schemas" --template-settings ../templates/default.json \
+	&& python3 scripts/generator.py --oss --strict --include "../schemas" --template-settings ../templates/default.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc
 
 deps:
