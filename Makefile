@@ -30,6 +30,7 @@ deps:
 dev:
 	cd build \
 	&& python3 -m venv venv && source venv/bin/activate && pip install -r scripts/requirements.txt \
+	&& dpkg-parsechangelog -l ../changelog --show-field Version > version \
 	&& python3 scripts/generator.py --include "../schemas" --template-settings ../templates/default.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc \
-	&& cp -R build/generated dist
+	&& cp -R generated ../dist
