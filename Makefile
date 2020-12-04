@@ -3,6 +3,7 @@ SHELL=/bin/bash
 
 UPSTREAM_REPO=https://github.com/elastic/ecs.git
 UPSTREAM_BRANCH=v1.7.0
+VERSION=$(shell dpkg-parsechangelog -l changelog --show-field Version)
 
 all: clean configure build
 	cp -R build/generated dist
@@ -17,11 +18,12 @@ configure:
 		cp "docs/$${FILE}" build/docs/; \
 		echo "include::$${FILE}[]" >> build/docs/index.asciidoc; \
 	done
-	dpkg-parsechangelog -l changelog --show-field Version > build/version
+	echo "$(VERSION)" > build/version
+	sed "s/VERSION/${VERSION}/" templates/default.json > build/scripts/default.json
 
 build:
 	cd build \
-	&& python3 scripts/generator.py --oss --strict --include "../schemas" --template-settings ../templates/default.json \
+	&& python3 scripts/generator.py --oss --strict --include "../schemas" --template-settings scripts/default.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc
 
 deps:
