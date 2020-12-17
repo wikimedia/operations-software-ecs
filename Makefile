@@ -24,6 +24,7 @@ configure:
 build:
 	cd build \
 	&& python3 scripts/generator.py --oss --strict --include "../schemas" --template-settings scripts/default.json \
+	&& python3 ../utils/generate_ecs_cleanup_filter.py -i generated/ecs/ecs_flat.yml -o generated/logstash/filter-ecs-cleanup.conf -v $$(cat version | cut -d '-' -f 1) -t ../templates/ecs_cleanup_filter.j2 \
 	&& asciidoc -o generated/index.html docs/index.asciidoc
 
 deps:
