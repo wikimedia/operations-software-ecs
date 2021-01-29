@@ -1,0 +1,14 @@
+diff --git a/docs/index.asciidoc b/docs/index.asciidoc
+index 5a83c52..3ca5cdf 100644
+--- a/docs/index.asciidoc
++++ b/docs/index.asciidoc
+@@ -7,4 +7,9 @@ include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
+ 
+ [[ecs-reference]]
++== Quick Links
++
++* <<ecs-field-reference>>
++* <<downloads>>
++
+ == Overview
+ 
