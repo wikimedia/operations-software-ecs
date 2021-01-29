@@ -59,13 +59,12 @@ def get_mapping(o):
 
 
 def build_branch(o):
-    output = get_mapping(o)
-    if is_leaf(o):
-        return output
-    else:
-        for k, v in o['properties'].items():
-            output[k] = build_branch(v)
-        return output
+    output = {}
+    for k, v in o['properties'].items():
+        output[k] = get_mapping(v)
+        if not is_leaf(v):
+            output[k]['properties'] = build_branch(v)
+    return output
 
 
 def is_leaf(o):
