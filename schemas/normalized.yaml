@@ -1,0 +1,42 @@
+- name: normalized
+  title: Normalized
+  group: 2
+  short: Fields generated and normalized by the logging pipeline.
+  description: >
+    Fields generated and normalized by the logging pipeline, but normally hidden from view in
+    the Kibana Discover app and saved search results in the Dashboard app.
+
+    This field is intended to contain fields that generally duplicate other fields and clutter the view.
+
+    This field is hidden superficially by an entry in the index pattern source filters.
+  type: group
+  fields:
+    - name: message
+      level: custom
+      type: keyword
+      example: "Hello World"
+      short: Log message optimized for aggregations.
+      description: >
+        The message field downcased, truncated to 256 characters, and indexed in an aggregatable form.
+
+        The downcasing and truncation is handled by the Logstash pipeline.
+
+        Ideally, this should be a multi-field of the message field, but lacking a truncation feature, this
+        behavior is currently impossible.  For more information, see: https://github.com/elastic/elasticsearch/issues/60329
+      ignore_above: 256
+    - name: dropped.no_such_field
+      level: custom
+      short: Array of field names dropped due to having no field definition.
+      description: >
+        Array of dropped field names due to no available field definition.
+
+        Values in this field would normally be dropped silently by ElasticSearch.
+      type: keyword
+    - name: dropped.field_type_mismatch
+      level: custom
+      type: keyword
+      short: Array of field names dropped due to a type conflict.
+      description: >
+        Array of dropped field names due to a type conflict.
+
+        Values in this field are the equivalent of those in error type `mapper_parsing_exception`.

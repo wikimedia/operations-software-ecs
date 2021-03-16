@@ -5,7 +5,7 @@ filter {
     # When running grok on log.original and a grok pattern does not match, move log.original into the message field
     if "_grokparsefailure" in [tags] {
       mutate {
-        rename => { "log.original" => "message" }
+        rename => { "[log][original]" => "message" }
         id => "filter/mutate/ungrokable"
       }
     }
@@ -13,6 +13,11 @@ filter {
     # Drop the host field if it is the wrong type
     ruby {
       code => "event.remove('host') unless event.get('host').is_a?(Hash)"
+    }
+
+    # add normalized_message field and truncate it to 256 characters (since ecs-1.7.0-2)
+    ruby {
+      code => 'event.set("[normalized][message]", event.get("message")[0..255].downcase) unless event.get("message").nil?'
     }
 
     # Strip out fields incompatible with ECS
