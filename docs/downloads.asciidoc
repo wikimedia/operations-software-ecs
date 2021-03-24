@@ -8,4 +8,3 @@
 * link:beats/fields.ecs.yml[Beats YAML]
 * link:elasticsearch/6/template.json[Elasticsearch 6 Template]
 * link:elasticsearch/7/template.json[Elasticsearch 7 Template]
-* link:logstash/filter-ecs-cleanup.conf[Logstash ECS Cleanup Filter]
