@@ -1,3 +1,10 @@
+ecs (1.7.0-4) wikimedia; urgency=medium
+
+  * Add metrics group.
+  * Add field ttfb.seconds.
+
+ -- Cole White <cwhite@wikimedia.org>  Fri, 11 Jun 2021 08:39:37 -0600
+
 ecs (1.7.0-3) wikimedia; urgency=medium
 
   * Add HTTP request and response headers fields as object[field:keyword]

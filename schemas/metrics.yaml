@@ -1,0 +1,19 @@
+- name: metrics
+  title: Metrics
+  group: 2
+  short: Fields for metrics generated from logs.
+  description: >
+    Fields for metrics generated from logs.
+
+    Subkeys of this field should generally follow Prometheus naming convention, paying particular attention to the suffix.
+
+    "A metric name should have a suffix indicating the unit, in plural form."  e.g. ttfb.seconds, heap.bytes, size.megabytes etc.
+
+    https://prometheus.io/docs/practices/naming/
+  type: group
+  fields:
+    - name: ttfb.seconds
+      level: custom
+      type: half_float
+      short: Time to first byte in seconds.
+      description: Time to first byte in seconds.
