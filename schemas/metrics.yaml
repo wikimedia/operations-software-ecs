@@ -17,3 +17,59 @@
       type: half_float
       short: Time to first byte in seconds.
       description: Time to first byte in seconds.
+    - name: puppet.changes.total
+      level: custom
+      type: long
+      short: total number of changes performed in a puppet run
+      description: total number of changes performed in a puppet run
+    - name: puppet.runtime
+      level: custom
+      type: object
+      short: total number of seconds spent executing a specific resource
+      description: total seconds spent executing a specific resource
+      example: "{\"schedule\": {\"seconds\": 0.25}}"
+    - name: puppet.resources.failed_to_restart.total
+      level: custom
+      type: long
+      short: number of resources puppet failed to restart
+      description: number of resources puppet failed to restart
+    - name: puppet.resources.changed.total
+      level: custom
+      type: long
+      short: number of resources puppet changed
+      description: number of resources puppet changed
+    - name: puppet.resources.skipped.total
+      level: custom
+      type: long
+      short: number of resources puppet skipped
+      description: number of resources puppet skipped
+    - name: puppet.resources.corrective_change.total
+      level: custom
+      type: long
+      short: number of resources puppet corrective changes made
+      description: number of resources puppet corrective changes made
+    - name: puppet.resources.failed.total
+      level: custom
+      type: long
+      short: number of resources puppet failed to manage
+      description: number of resources puppet failed to manage
+    - name: puppet.resources.scheduled.total
+      level: custom
+      type: long
+      short: number of resources puppet scheduled
+      description: number of resources puppet scheduled
+    - name: puppet.resources.restarted.total
+      level: custom
+      type: long
+      short: number of resources puppet restarted
+      description: number of resources puppet restarted
+    - name: puppet.resources.out_of_sync.total
+      level: custom
+      type: long
+      short: number of resources puppet found to be out_of_sync
+      description: number of resources puppet found to be out_of_sync
+    - name: puppet.resources.total
+      level: custom
+      type: long
+      short: Total number of resources affected
+      description: Total number of resources affected
