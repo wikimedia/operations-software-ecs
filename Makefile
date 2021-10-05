@@ -18,10 +18,10 @@ configure:
 		cp "docs/$${FILE}" build/docs/; \
 		echo "include::$${FILE}[]" >> build/docs/index.asciidoc; \
 	done
-	echo "$(VERSION)" > build/version
-	sed "s/VERSION/${VERSION}/" templates/default.json > build/scripts/default.json
 
 build:
+	echo "$(VERSION)" > build/version
+	sed "s/VERSION/${VERSION}/" templates/default.json > build/scripts/default.json
 	cd build \
 	&& python3 scripts/generator.py --oss --strict --include "../schemas" --template-settings scripts/default.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc
