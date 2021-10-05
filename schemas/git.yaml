@@ -3,46 +3,42 @@
   description: Fields related to git repositories
   type: group
   fields:
-    - name: git.repo.name
+    - name: repo.name
       level: custom
       type: keyword
       short: The name of the git repo
       description: The name of the git repo
-    - name: git.repo.url.original
+    - name: repo.url.original
       level: custom
       type: keyword
       short: Unmodified original url as seen in the event source.
       description: Unmodified original url as seen in the event source.
-    - name: git.repo.url.scheme
+    - name: repo.url.scheme
       level: custom
       type: keyword
       short: Scheme of the request, such as "https" or "ssh"
       description: Scheme of the request, such as "https" or "ssh"
-    - name: git.repo.url.domain
+    - name: repo.url.domain
       level: custom
       type: keyword
       short: Domain of the url
       description: Domain of the url
-    - name: git.repo.url.full
+    - name: repo.url.full
       level: custom
       type: keyword
       short: The full url
-      description: >
-        If full URLs are important to your use case, they should
-        be stored in url.full, whether this field is reconstructed
-        or present in the event source.
       description: Unmodified original url as seen in the event source.
-    - name: git.commit.author
+    - name: commit.author
       level: custom
       type: keyword
       short: The author of the git commit
       description: The author of the git commit
-    - name: git.commit.hash.sha1.full
+    - name: commit.hash.sha1.full
       level: custom
       type: keyword
       short: The full sha1 hash of a git commit
       description: The full sha1 hash of a git commit
-    - name: git.commit.hash.sha1.short
+    - name: commit.hash.sha1.short
       level: custom
       type: keyword
       short: The short sha1 hash of a git commit

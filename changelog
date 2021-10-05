@@ -1,3 +1,11 @@
+ecs (1.7.0-5) wikimedia; urgency=medium
+
+  * added capability to modify dynamic templates
+  * added git schema definition
+  * added metrics.puppet schema definitions
+
+ -- Cole White <cwhite@wikimedia.org>  Mon, 04 Oct 2021 20:13:44 -0600
+
 ecs (1.7.0-4) wikimedia; urgency=medium
 
   * Add metrics group.
