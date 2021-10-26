@@ -1,3 +1,10 @@
+ecs (1.7.0-6) wikimedia; urgency=medium
+
+  * Added stack.head for aggregating events by the first line
+    of the stack_trace.
+
+ -- Cole White <cwhite@wikimedia.org>  Tue, 26 Oct 2021 10:46:29 -0600
+
 ecs (1.7.0-5) wikimedia; urgency=medium
 
   * added capability to modify dynamic templates

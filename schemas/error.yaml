@@ -1,0 +1,11 @@
+---
+- name: error
+  fields:
+    - name: stack.head
+      level: custom
+      type: keyword
+      short: Head of the stack trace.
+      description: >
+        The first line of the stack trace useful for aggregation.
+
+        This is an attribute of the `stack` object, unlike `stack_trace`.
