@@ -1,3 +1,9 @@
+ecs (1.11.0-1) wikimedia; urgency=medium
+
+  * Upgrade ECS upstream to 1.11.0
+
+ -- Cole White <cwhite@wikimedia.org>  Thu, 28 Oct 2021 10:31:49 -0600
+
 ecs (1.7.0-6) wikimedia; urgency=medium
 
   * Added stack.head for aggregating events by the first line

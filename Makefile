@@ -2,7 +2,7 @@
 SHELL=/bin/bash
 
 UPSTREAM_REPO=https://github.com/elastic/ecs.git
-UPSTREAM_BRANCH=v1.7.0
+UPSTREAM_BRANCH=v1.11.0
 VERSION=$(shell dpkg-parsechangelog -l changelog --show-field Version)
 
 all: clean configure build

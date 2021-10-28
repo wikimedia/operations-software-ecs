@@ -1,8 +1,9 @@
-diff --git a/docs/index.asciidoc b/docs/index.asciidoc
-index 5a83c52..3ca5cdf 100644
---- a/docs/index.asciidoc
-+++ b/docs/index.asciidoc
-@@ -7,4 +7,9 @@ include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
+diff --git a/scripts/templates/index.j2 b/scripts/templates/index.j2
+index a354b5c..269cce3 100644
+--- a/scripts/templates/index.j2
++++ b/scripts/templates/index.j2
+@@ -8,6 +8,11 @@ include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
+ :ecs_github_repo_link: https://github.com/elastic/ecs/blob/{source_branch}
  
  [[ecs-reference]]
 +== Quick Links
@@ -12,3 +13,9 @@ index 5a83c52..3ca5cdf 100644
 +
  == Overview
  
+ This is the documentation of ECS version {{ ecs_generated_version }}.
+@@ -67,3 +72,4 @@ include::fields.asciidoc[]
+ include::field-values.asciidoc[]
+ include::migrating.asciidoc[]
+ include::additional.asciidoc[]
++include::downloads.asciidoc[]
