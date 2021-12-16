@@ -24,7 +24,7 @@ build:
 	sed "s/VERSION/${VERSION}/" templates/default.json > build/scripts/default.json
 	sed "s/VERSION/${VERSION}/" templates/dynamic_templates.json > build/scripts/dynamic_templates.json
 	cd build \
-	&& python3 scripts/generator.py --oss --strict --include "../schemas" --template-settings scripts/default.json --mapping-settings scripts/dynamic_templates.json \
+	&& python3 scripts/generator.py --oss --strict --subset "../subsets/*.yaml" --include "../schemas" --template-settings scripts/default.json --mapping-settings scripts/dynamic_templates.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc
 
 deps:
@@ -37,3 +37,6 @@ dev:
 	&& python3 scripts/generator.py --include "../schemas" --template-settings ../templates/default.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc \
 	&& cp -R generated ../dist
+
+release:
+	dch -c changelog -i --distribution wikimedia

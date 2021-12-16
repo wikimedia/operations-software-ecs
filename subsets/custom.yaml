@@ -1,0 +1,10 @@
+# Custom schemas allowed through the subset filter
+---
+name: custom
+fields:
+  git:
+    fields: '*'
+  metrics:
+    fields: '*'
+  normalized:
+    fields: '*'

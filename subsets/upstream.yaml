@@ -1,0 +1,74 @@
+# Upstream schemas allowed through the subset filter
+---
+name: upstream
+fields:
+  base:
+    fields: '*'
+  as:
+    fields: '*'
+  client:
+    fields: '*'
+  container:
+    fields: '*'
+  destination:
+    fields: '*'
+  ecs:
+    fields: '*'
+  error:
+    fields: '*'
+  event:
+    fields: '*'
+  geo:
+    fields: '*'
+  hash:
+    fields: '*'
+  host:
+    fields: '*'
+  http:
+    fields: '*'
+  log:
+    fields: '*'
+  network:
+    fields: '*'
+  observer:
+    fields: '*'
+  orchestrator:
+    fields: '*'
+  os:
+    fields: '*'
+  package:
+    fields: '*'
+  process:
+    fields:
+      args: {}
+      args_count: {}
+      command_line: {}
+      entity_id: {}
+      executable: {}
+      exit_code: {}
+      name: {}
+      pgid: {}
+      pid: {}
+      ppid: {}
+      start: {}
+      thread:
+        fields: '*'
+      title: {}
+      uptime: {}
+      working_directory: {}
+  server:
+    fields: '*'
+  service:
+    fields: '*'
+  source:
+    fields: '*'
+  tls:
+    fields: '*'
+  tracing:
+    fields: '*'
+  url:
+    fields: '*'
+  user:
+    fields: '*'
+  user_agent:
+    fields: '*'
