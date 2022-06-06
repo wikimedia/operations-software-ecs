@@ -21,8 +21,8 @@ configure:
 
 build:
 	echo "$(VERSION)" > build/version
-	sed "s/VERSION/${VERSION}/" templates/default.json > build/scripts/default.json
-	sed "s/VERSION/${VERSION}/" templates/dynamic_templates.json > build/scripts/dynamic_templates.json
+	sed "s/__VERSION__/${VERSION}/g" templates/default.json > build/scripts/default.json
+	sed "s/__VERSION__/${VERSION}/g" templates/dynamic_templates.json > build/scripts/dynamic_templates.json
 	cd build \
 	&& python3 scripts/generator.py --oss --strict --subset "../subsets/*.yaml" --include "../schemas" --template-settings scripts/default.json --mapping-settings scripts/dynamic_templates.json \
 	&& asciidoc -o generated/index.html docs/index.asciidoc

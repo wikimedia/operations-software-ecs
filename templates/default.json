@@ -1,5 +1,5 @@
 {
-    "index_patterns": ["ecs-VERSION-*", "ecs-*-VERSION-*"],
+    "index_patterns": ["ecs-__VERSION__-*", "ecs-*-__VERSION__-*"],
     "order": 1,
     "settings": {
       "analysis": {
