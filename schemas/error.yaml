@@ -9,3 +9,14 @@
         The first line of the stack trace useful for aggregation.
 
         This is an attribute of the `stack` object, unlike `stack_trace`.
+
+    - name: stack.previous_trace
+      level: custom
+      type: keyword
+      index: false
+      description: >
+        The previous stack trace.
+
+      multi_fields:
+      - type: text
+        name: text

@@ -1,3 +1,10 @@
+ecs (1.11.0-3) wikimedia; urgency=medium
+
+  * Added error.stack.previous_trace field.
+  * Pinned MarkdownSafe to 2.0.1
+
+ -- Cole White <cwhite@wikimedia.org>  Tue, 13 Sep 2022 20:15:48 +0000
+
 ecs (1.11.0-2) wikimedia; urgency=medium
 
   * Add and enable subset filters.
