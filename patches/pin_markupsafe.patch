@@ -1,0 +1,9 @@
+diff --git a/scripts/requirements.txt b/scripts/requirements.txt
+index 0e97888..4b2faf9 100644
+--- a/scripts/requirements.txt
++++ b/scripts/requirements.txt
+@@ -5,3 +5,4 @@ yamllint==1.19.0
+ mock==4.0.2
+ gitpython==3.1.2
+ Jinja2==2.11.3
++MarkupSafe==2.0.1
