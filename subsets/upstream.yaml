@@ -26,6 +26,8 @@ fields:
     fields: '*'
   http:
     fields: '*'
+  interface:
+    fields: '*'
   log:
     fields: '*'
   network:
@@ -56,6 +58,8 @@ fields:
       title: {}
       uptime: {}
       working_directory: {}
+  rule:
+    fields: '*'
   server:
     fields: '*'
   service:

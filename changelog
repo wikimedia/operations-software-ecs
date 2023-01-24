@@ -1,9 +1,15 @@
+ecs (1.11.0-5) wikimedia; urgency=medium
+
+  * Enable interface and rule fields.
+
+ -- Cole White <cwhite@wikimedia.org>  Tue, 24 Jan 2023 16:43:41 +0000
+
 ecs (1.11.0-4) wikimedia; urgency=medium
 
   * Documentation-only update.
   * Define ecs.version field format.
 
- -- Cole White <cwhite@wikimedia-lt>  Fri, 20 Jan 2023 16:06:47 +0000
+ -- Cole White <cwhite@wikimedia.org>  Fri, 20 Jan 2023 16:06:47 +0000
 
 ecs (1.11.0-3) wikimedia; urgency=medium
 
@@ -58,7 +64,7 @@ ecs (1.7.0-2) wikimedia; urgency=medium
   * Added normalized.message field as keyword type
   * Added ECS cleanup filter generating normalized.message
 
- -- Cole White <cwhite@wikimedia-org>  Tue, 16 Mar 2021 15:11:48 -0600
+ -- Cole White <cwhite@wikimedia.org>  Tue, 16 Mar 2021 15:11:48 -0600
 
 ecs (1.7.0-1) wikimedia; urgency=medium
 
