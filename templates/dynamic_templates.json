@@ -1,5 +1,5 @@
 {
-  "_meta": {"version": "VERSION"},
+  "_meta": {"version": "__VERSION__"},
   "date_detection": false,
   "dynamic_templates": [
     {
