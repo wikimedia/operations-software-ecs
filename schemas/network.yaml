@@ -1,0 +1,14 @@
+---
+- name: network
+  fields:
+    - name: tcp_flags
+      level: custom
+      type: keyword
+      example: "[\"ack\", \"fin\"]"
+      short: Array of TCP Flags found in the packet.
+      description: >
+        Array of TCP Flags found in the packet.
+
+        The field value must be normalized to lowercase for querying.
+      normalize:
+        - array
