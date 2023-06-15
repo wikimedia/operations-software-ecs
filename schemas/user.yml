@@ -1,0 +1,16 @@
+---
+- name: user
+  fields:
+    - name: extra
+      level: custom
+      type: object
+      object_type: keyword
+      enabled: false
+      example: "{\"authenticator\": \"ldap\", \"cipher\": \"argon2\"}"
+      short: Custom key/value pairs.
+      description: >
+        Additional information in key/value pairs.
+
+        For additional information provided by the authenticator to events.
+
+        Note: Not searchable or filterable.
