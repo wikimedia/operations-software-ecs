@@ -7,6 +7,7 @@ VERSION=$(shell dpkg-parsechangelog -l changelog --show-field Version)
 
 all: clean configure build
 	cp -R build/generated dist
+	cp validator_tool/validator.html dist/
 
 clean:
 	rm -rf build dist

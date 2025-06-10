@@ -1,8 +1,8 @@
 diff --git a/scripts/templates/index.j2 b/scripts/templates/index.j2
-index a354b5c..269cce3 100644
+index a354b5c..c677409 100644
 --- a/scripts/templates/index.j2
 +++ b/scripts/templates/index.j2
-@@ -8,6 +8,11 @@ include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
+@@ -8,6 +8,12 @@ include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
  :ecs_github_repo_link: https://github.com/elastic/ecs/blob/{source_branch}
  
  [[ecs-reference]]
@@ -10,11 +10,12 @@ index a354b5c..269cce3 100644
 +
 +* <<ecs-field-reference>>
 +* <<downloads>>
++* link:validator.html[&#91;validator&#93;]
 +
  == Overview
  
  This is the documentation of ECS version {{ ecs_generated_version }}.
-@@ -67,3 +72,4 @@ include::fields.asciidoc[]
+@@ -67,3 +73,4 @@ include::fields.asciidoc[]
  include::field-values.asciidoc[]
  include::migrating.asciidoc[]
  include::additional.asciidoc[]

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+    <title>WMF Elastic Common Schema (ECS) Validator Tool</title>
+    <script type="text/javascript">
+        let template_data = undefined;
+
+        const types_map = {
+            date:         [ 'string', 'datetime' ],
+            keyword:      [ 'string','array&lt;string&gt;' ],
+            text:         [ 'string', ],
+            object:       [ 'object' ],
+            boolean:      [ 'boolean' ],
+            float:        [ 'float' ],
+            geo_point:    [ 'object' ],
+            half_float:   [ 'float' ],
+            integer:      [ 'integer' ],
+            ip:           [ 'string' ],
+            long:         [ 'integer' ],
+            scaled_float: [ 'float' ],
+            // Non-OpenSearch data type indicating a namespace that is included in the fully-expanded template mapping.
+            // See: get_template_namespaces()
+            parent:       [ 'object' ]
+        }
+
+        // Get the specific type of the entity provided.
+        function get_type(entity) {
+            if (entity === undefined) {
+                return 'undefined';
+            }
+            if (typeof entity === 'object') {
+                if (Array.isArray(entity)) {
+                    return 'array';
+                }
+                return 'object';
+            }
+            if (typeof entity === 'string') {
+                return 'string';
+            }
+            if (typeof entity === 'boolean') {
+                return 'boolean';
+            }
+            if (!isNaN(parseFloat(entity))) {
+                return 'float';
+            }
+            if (!isNaN(parseInt(entity))) {
+                return 'integer';
+            }
+        }
+
+        // Remove dot characters from the left, right, or both ends.
+        function chomp_dots(str, from='both') {
+            if ( ['left', 'both'].includes(from) ) {
+                if (str[0] === '.') { str = str.slice(1) }
+            }
+            if ( ['right', 'both'].includes(from)) {
+                if (str.slice(-1) === '.') { str = str.slice(0, -1)}
+            }
+            return str
+        }
+
+        // Build up a list of namespaces from dynamic template definitions.
+        // Warning: only handles one globbig field, e.g. metrics.puppet.runtime.*.seconds
+        function get_dynamic_template_namespaces(dynamic_templates) {
+            const output = {}
+            for (const dt of dynamic_templates) {
+                if (Object.keys(dt).includes('strings_as_keyword')) { continue; }
+                for (const [_, settings] of Object.entries(dt)) {
+                    if (settings.path_match) {
+                        let [parent, child] = settings.path_match.split('*');
+                        parent = chomp_dots(parent, 'right');
+                        child = chomp_dots(child, 'left');
+                        output[parent] = { type: settings.mapping.type, child: child };
+                    }
+                }
+            }
+            return output;
+        }
+
+        // Build up a fully-expanded list of namespaces from the template.
+        // Warning: recursive function.
+        function get_template_namespaces(template, key='', namespace='', output={}) {
+            if (key.length === 0) {
+                namespace = '';
+            } else {
+                namespace = chomp_dots( `${namespace}.${key}`, 'left');
+                // if (namespace[0] === '.') {
+                //     namespace = namespace.slice(1)
+                // }
+            }
+
+            if (template.properties) {
+                output[namespace] = { type: 'parent', indexed: true };
+                for (const [k, v] of Object.entries(template.properties)) {
+                    get_template_namespaces(v, k, namespace, output);
+                }
+                return;
+            }
+
+            if (template.type) {
+                if (template.type === 'geo_point') {
+                    output[`${namespace}.lat`] = { type: 'float', indexed: true };
+                    output[`${namespace}.lon`] = { type: 'float', indexed: true };
+                }
+                output[namespace] = { type: template.type, indexed: !(template.enabled === false || template.index === false) };
+                return
+            }
+            if (template instanceof Object) {
+                for (const [k, v] of Object.entries(template)) {
+                    get_template_namespaces(v, k, namespace, output);
+                }
+            }
+            return output;
+        }
+
+        // Build up a list of namespaces from the event.
+        // Warning: recursive function.
+        function get_namespaces(evt, excluded_namespaces=[], key='', namespace='', output={}) {
+            if (key.length === 0) {
+                namespace = '';
+            } else {
+                namespace = chomp_dots( `${namespace}.${key}`, 'left');
+                // if (namespace[0] === '.') {
+                //     namespace = namespace.slice(1)
+                // }
+            }
+            if (excluded_namespaces.includes( namespace )) { return; }
+
+            if (get_type(evt) !== 'object') {
+                output[namespace] = get_type(evt)
+            }
+
+            if ( get_type(evt) === 'object' ) {
+                if (Object.keys(evt).length === 0) {
+                    output[namespace] = get_type(evt)
+                }
+                for (const [k, v] of Object.entries(evt)) {
+                    get_namespaces(v, excluded_namespaces, k, namespace, output);
+                }
+            }
+            return output;
+        }
+
+        // Get objects from the template namespaces object.
+        function get_template_objects(template_namespaces, excluded_namespaces=[]) {
+            const output = {}
+            for (let [k, v] of Object.entries(template_namespaces)) {
+                if (excluded_namespaces.includes(k)) { continue; }
+                if (v.type === 'object') {
+                    output[k] = v;
+                }
+            }
+            return output;
+        }
+
+        // Get unindexed objects from the template namespaces object.
+        function get_unindexed_template_objects(template_namespaces) {
+            const output = {}
+            for (let [k, v] of Object.entries(template_namespaces)) {
+                if (!v.indexed) {
+                    output[k] = v;
+                }
+            }
+            return output;
+        }
+
+        // Get geo_point objects from the template namespaces object.
+        function get_geo_points(template_namespaces) {
+            const output = {}
+            for (let [k, v] of Object.entries(template_namespaces)) {
+                if (v.type === 'geo_point') {
+                    output[k] = v;
+                }
+            }
+            return output;
+        }
+
+        // Get date-typed objects from the template namespaces object.
+        function get_dates(template_namespaces) {
+            const output = {}
+            for (let [k, v] of Object.entries(template_namespaces)) {
+                if (v.type === 'date') {
+                    output[k] = v;
+                }
+            }
+            return output;
+        }
+
+        // Get the object at a provided namespace.
+        function get_entity(namespace, o) {
+            let output = o;
+
+            const ns = namespace.split('.');
+            for ( k of ns ) {
+                output = output[k];
+                if (output === undefined) {
+                    // shouldn't ever hit here
+                    break;
+                }
+            }
+            return output;
+        }
+
+        // Check if the provided data type is one of the provided valid types.
+        function is_data_type_correct(data, valid_types) {
+            return valid_types.includes(get_type(data))
+        }
+
+        function load_template_data() {
+            fetch('elasticsearch/7/template.json').then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`)
+                }
+                return response.json();
+            })
+                .then((json) => template_data = json)
+        }
+
+        function get_errors(event) {
+            const errors = { no_such_field: [], field_type_mismatch: [] };
+
+            const dynamic_template_objects = get_dynamic_template_namespaces(template_data.mappings.dynamic_templates)
+            const template_namespaces = get_template_namespaces(template_data.mappings.properties)
+            const template_indexed_objects = get_template_objects(template_namespaces, Object.keys(dynamic_template_objects))
+            const template_unindexed_objects = get_unindexed_template_objects(template_namespaces)
+            const template_geo_points = get_geo_points(template_namespaces)
+            const template_dates = get_dates(template_namespaces)
+
+            const excluded_namespaces = Object.keys(template_indexed_objects)
+                .concat(Object.keys(dynamic_template_objects))
+                .concat(Object.keys(template_unindexed_objects))
+                .concat(Object.keys(template_geo_points))
+                .concat(Object.keys(template_dates))
+
+            const event_namespaces = get_namespaces(event, excluded_namespaces)
+
+            // handle dynamic template objects
+            for (let [template_namespace, properties] of Object.entries(dynamic_template_objects)) {
+                let entity = get_entity(template_namespace, event);
+                if (get_type(entity) !== 'object') { continue; }
+                for (let [k, v] of Object.entries(entity)) {
+                    if (!is_data_type_correct(v[properties.child], types_map[properties.type])) {
+                        let err = `${template_namespace}.${k}`
+                        errors.field_type_mismatch.push({ name: err, msg: `Invalid for dynamic template.` });
+                        if (event_namespaces[err]) { delete event_namespaces[err]; }
+                    }
+                }
+            }
+
+            // handle templated objects
+            for (let template_namespace of Object.keys(template_indexed_objects)) {
+                let entity = get_entity(template_namespace, event);
+                if (get_type(entity) !== 'object') { continue; }
+                for (let [k, v] of Object.entries(entity)) {
+                    if (is_data_type_correct(v, types_map['keyword'])) { continue; }
+                    if (get_type(v) === 'array') {
+                        if (v.map((x) => is_data_type_correct(x, types_map['keyword'])).every((x) => x === true)) { continue; }
+                    }
+                    let err = `${template_namespace}.${k}`
+                    errors.field_type_mismatch.push({ name: err, msg: `Expected keyword, got ${get_type(v)}` });
+                    if (event_namespaces[err]) { delete event_namespaces[err]; }
+                }
+            }
+
+            // handle templated geo_points
+            for (let template_namespace of Object.keys(template_geo_points)) {
+                let entity = get_entity(template_namespace, event);
+                if (get_type(entity) === 'undefined') { continue; }
+                if (get_type(entity) !== 'object') {
+                    errors.field_type_mismatch.push({ name: template_namespace, msg: `Expected object, got ${get_type(entity)}`});
+                }
+                for (let [k, v] of Object.entries(entity)) {
+                    if (!['lat', 'lon'].includes(k)) {
+                        let err = `${template_namespace}.${k}`;
+                        errors.no_such_field.push({ name: err });
+                        if (event_namespaces[err]) { delete event_namespaces[err]; }
+                        continue;
+                    }
+                    if (get_type(v) !== 'float') {
+                        let err = `${template_namespace}.${k}`;
+                        errors.field_type_mismatch.push({ name: err, msg: `Expected float, got ${get_type(v)}` });
+                        if (event_namespaces[err]) { delete event_namespaces[err]; }
+                    }
+                }
+            }
+            // handle templated dates
+            for (let template_namespace of Object.keys(template_dates)) {
+                let entity = get_entity(template_namespace, event);
+                if (get_type(entity) === 'undefined') { continue; }
+                if (get_type(entity) === 'string') {
+                    let dt = new Date(entity);
+                    if (!isNaN(dt.valueOf())) {
+                        // Warning: this is silly.  Detection could probably be improved.
+                        if (dt.toISOString().slice(0, 19) === entity.slice(0, 19)) { continue; }
+                    }
+                }
+                errors.field_type_mismatch.push({name: template_namespace, msg: `Expected iso8601-formatted date string.` });
+                delete event_namespaces[template_namespace];
+            }
+
+            // handle remaining fields
+            for (let [namespace, t] of Object.entries(event_namespaces)) {
+                let properties = template_namespaces[namespace];
+                if (properties === undefined) {
+                    errors.no_such_field.push({ name: namespace });
+                    continue;
+                }
+                if (!types_map[properties['type']].includes(t)) {
+                    errors.field_type_mismatch.push({ name: namespace, msg: `Expected ${properties['type']}, got ${t}` })
+                }
+            }
+            return errors;
+        }
+
+        function reset() {
+            document.getElementById('field-type-mismatches').innerHTML = '<tr><td colspan="2"></td></tr>';
+            document.getElementById('no-such-fields').innerHTML = '<tr><td colspan="2"></td></tr>';
+            document.getElementById('input').value = '';
+        }
+
+        function get_doc() {
+            let output = '<table><tr><th>Data type</th><th>Valid types</th></tr>';
+            for (let [k, v] of Object.entries(types_map)) {
+                output = `${output}\n<tr><td>${k}</td><td>[${v.join(', ')}]</td>`;
+            }
+            output = `${output}</table>`
+            return output;
+        }
+
+        function render() {
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('input').value)
+            } catch (e) {
+                document.getElementById('field-type-mismatches').innerHTML = 'Could not parse JSON input.'
+                return;
+            }
+            const errors = get_errors(data);
+            document.getElementById('field-type-mismatches')
+                .innerHTML = errors.field_type_mismatch.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
+            document.getElementById('no-such-fields')
+                .innerHTML = errors.no_such_field.map((v) => `<tr><td colspan="2">${v.name}</td></tr>`).join('\n');
+        }
+        window.onload = (_) => {
+            load_template_data()
+            reset();
+            document.getElementById('doc').innerHTML = get_doc();
+            console.log('Template data loaded.')
+        }
+    </script>
+</head>
+<body style="font-family: monospace">
+<table>
+    <tr><td><h2>ECS Validation Tool</h2></td></tr>
+    <tr><td>Event data in JSON format:</td></tr>
+    <tr style="vertical-align: top">
+        <td><textarea rows="30", cols="100", id="input"></textarea></td>
+        <td>
+            <h3>Field Type Mismatch:</h3>
+            <table id="field-type-mismatches"></table>
+            </ul>
+            <h3>No Such Field:</h3>
+            <table id="no-such-fields"></table>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align: right">
+            <button onclick="render()">Validate</button>
+            <button onclick="reset()">Reset</button>
+        </td>
+    </tr>
+    <tr><td colspan="2" id="doc"></td></tr>
+    <tr><td colspan="2">Please report bugs to the SRE Observability Team on <a href="https://phabricator.wikimedia.org/project/profile/5391/">Phabricator</a>.</td></tr>
+</table>
+</body>
+</html>
