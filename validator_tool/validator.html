@@ -23,7 +23,7 @@
             // Non-OpenSearch data type indicating a namespace that is included in the fully-expanded template mapping.
             // See: get_template_namespaces()
             parent:       [ 'object' ]
-        }
+        };
 
         // Get the specific type of the entity provided.
         function get_type(entity) {
@@ -53,18 +53,18 @@
         // Remove dot characters from the left, right, or both ends.
         function chomp_dots(str, from='both') {
             if ( ['left', 'both'].includes(from) ) {
-                if (str[0] === '.') { str = str.slice(1) }
+                if (str[0] === '.') { str = str.slice(1); }
             }
-            if ( ['right', 'both'].includes(from)) {
-                if (str.slice(-1) === '.') { str = str.slice(0, -1)}
+            if ( ['right', 'both'].includes(from) ) {
+                if (str.slice(-1) === '.') { str = str.slice(0, -1); }
             }
-            return str
+            return str;
         }
 
         // Build up a list of namespaces from dynamic template definitions.
-        // Warning: only handles one globbig field, e.g. metrics.puppet.runtime.*.seconds
+        // Warning: only handles one globbing field, e.g. metrics.puppet.runtime.*.seconds
         function get_dynamic_template_namespaces(dynamic_templates) {
-            const output = {}
+            const output = {};
             for (const dt of dynamic_templates) {
                 if (Object.keys(dt).includes('strings_as_keyword')) { continue; }
                 for (const [_, settings] of Object.entries(dt)) {
@@ -86,9 +86,6 @@
                 namespace = '';
             } else {
                 namespace = chomp_dots( `${namespace}.${key}`, 'left');
-                // if (namespace[0] === '.') {
-                //     namespace = namespace.slice(1)
-                // }
             }
 
             if (template.properties) {
@@ -122,19 +119,16 @@
                 namespace = '';
             } else {
                 namespace = chomp_dots( `${namespace}.${key}`, 'left');
-                // if (namespace[0] === '.') {
-                //     namespace = namespace.slice(1)
-                // }
             }
             if (excluded_namespaces.includes( namespace )) { return; }
 
             if (get_type(evt) !== 'object') {
-                output[namespace] = get_type(evt)
+                output[namespace] = get_type(evt);
             }
 
             if ( get_type(evt) === 'object' ) {
                 if (Object.keys(evt).length === 0) {
-                    output[namespace] = get_type(evt)
+                    output[namespace] = get_type(evt);
                 }
                 for (const [k, v] of Object.entries(evt)) {
                     get_namespaces(v, excluded_namespaces, k, namespace, output);
@@ -145,7 +139,7 @@
 
         // Get objects from the template namespaces object.
         function get_template_objects(template_namespaces, excluded_namespaces=[]) {
-            const output = {}
+            const output = {};
             for (let [k, v] of Object.entries(template_namespaces)) {
                 if (excluded_namespaces.includes(k)) { continue; }
                 if (v.type === 'object') {
@@ -157,7 +151,7 @@
 
         // Get unindexed objects from the template namespaces object.
         function get_unindexed_template_objects(template_namespaces) {
-            const output = {}
+            const output = {};
             for (let [k, v] of Object.entries(template_namespaces)) {
                 if (!v.indexed) {
                     output[k] = v;
@@ -168,7 +162,7 @@
 
         // Get geo_point objects from the template namespaces object.
         function get_geo_points(template_namespaces) {
-            const output = {}
+            const output = {};
             for (let [k, v] of Object.entries(template_namespaces)) {
                 if (v.type === 'geo_point') {
                     output[k] = v;
@@ -205,36 +199,51 @@
 
         // Check if the provided data type is one of the provided valid types.
         function is_data_type_correct(data, valid_types) {
-            return valid_types.includes(get_type(data))
+            return valid_types.includes(get_type(data));
         }
 
         function load_template_data() {
             fetch('elasticsearch/7/template.json').then((response) => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status}`)
+                    throw new Error(`HTTP error: ${response.status}`);
                 }
                 return response.json();
             })
                 .then((json) => template_data = json)
+                .then(() => render());
         }
 
         function get_errors(event) {
-            const errors = { no_such_field: [], field_type_mismatch: [] };
+            const errors = { no_such_field: [], field_type_mismatch: [], expected_field_errors: [] };
 
-            const dynamic_template_objects = get_dynamic_template_namespaces(template_data.mappings.dynamic_templates)
-            const template_namespaces = get_template_namespaces(template_data.mappings.properties)
-            const template_indexed_objects = get_template_objects(template_namespaces, Object.keys(dynamic_template_objects))
-            const template_unindexed_objects = get_unindexed_template_objects(template_namespaces)
-            const template_geo_points = get_geo_points(template_namespaces)
-            const template_dates = get_dates(template_namespaces)
+            const dynamic_template_objects = get_dynamic_template_namespaces(template_data.mappings.dynamic_templates);
+            const template_namespaces = get_template_namespaces(template_data.mappings.properties);
+            const template_indexed_objects = get_template_objects(template_namespaces, Object.keys(dynamic_template_objects));
+            const template_unindexed_objects = get_unindexed_template_objects(template_namespaces);
+            const template_geo_points = get_geo_points(template_namespaces);
+            const template_dates = get_dates(template_namespaces);
 
             const excluded_namespaces = Object.keys(template_indexed_objects)
                 .concat(Object.keys(dynamic_template_objects))
                 .concat(Object.keys(template_unindexed_objects))
                 .concat(Object.keys(template_geo_points))
-                .concat(Object.keys(template_dates))
+                .concat(Object.keys(template_dates));
 
-            const event_namespaces = get_namespaces(event, excluded_namespaces)
+            const event_namespaces = get_namespaces(event, excluded_namespaces);
+
+            // check ecs.version field
+            const ecs_version = get_entity('ecs.version', event);
+            if (ecs_version === undefined) {
+                errors.expected_field_errors.push({name: 'ecs.version', 'msg': 'Expected string, got undefined'});
+                errors.field_type_mismatch.push({name: 'Invalid input', msg: ''});
+                errors.no_such_field.push({name: 'Invalid input', msg: ''});
+
+                return errors;
+            }
+            const major_version = template_data.mappings._meta.version[0];
+            if (ecs_version[0] !== major_version) {
+                errors.expected_field_errors.push({name: 'ecs.version', 'msg': `Expected major version ${major_version}, got ${ecs_version[0]}`});
+            }
 
             // handle dynamic template objects
             for (let [template_namespace, properties] of Object.entries(dynamic_template_objects)) {
@@ -242,7 +251,7 @@
                 if (get_type(entity) !== 'object') { continue; }
                 for (let [k, v] of Object.entries(entity)) {
                     if (!is_data_type_correct(v[properties.child], types_map[properties.type])) {
-                        let err = `${template_namespace}.${k}`
+                        let err = `${template_namespace}.${k}`;
                         errors.field_type_mismatch.push({ name: err, msg: `Invalid for dynamic template.` });
                         if (event_namespaces[err]) { delete event_namespaces[err]; }
                     }
@@ -258,7 +267,7 @@
                     if (get_type(v) === 'array') {
                         if (v.map((x) => is_data_type_correct(x, types_map['keyword'])).every((x) => x === true)) { continue; }
                     }
-                    let err = `${template_namespace}.${k}`
+                    let err = `${template_namespace}.${k}`;
                     errors.field_type_mismatch.push({ name: err, msg: `Expected keyword, got ${get_type(v)}` });
                     if (event_namespaces[err]) { delete event_namespaces[err]; }
                 }
@@ -308,7 +317,7 @@
                     continue;
                 }
                 if (!types_map[properties['type']].includes(t)) {
-                    errors.field_type_mismatch.push({ name: namespace, msg: `Expected ${properties['type']}, got ${t}` })
+                    errors.field_type_mismatch.push({ name: namespace, msg: `Expected ${properties['type']}, got ${t}` });
                 }
             }
             return errors;
@@ -325,29 +334,42 @@
             for (let [k, v] of Object.entries(types_map)) {
                 output = `${output}\n<tr><td>${k}</td><td>[${v.join(', ')}]</td>`;
             }
-            output = `${output}</table>`
+            output = `${output}</table>`;
             return output;
         }
 
         function render() {
             let data = {};
             try {
-                data = JSON.parse(document.getElementById('input').value)
+                data = JSON.parse(document.getElementById('input').value);
             } catch (e) {
-                document.getElementById('field-type-mismatches').innerHTML = 'Could not parse JSON input.'
+                document.getElementById('field-type-mismatches').innerHTML = 'Could not parse JSON input.';
+                document.getElementById('no-such-fields').innerHTML = 'Could not parse JSON input.';
                 return;
             }
             const errors = get_errors(data);
-            document.getElementById('field-type-mismatches')
-                .innerHTML = errors.field_type_mismatch.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
-            document.getElementById('no-such-fields')
-                .innerHTML = errors.no_such_field.map((v) => `<tr><td colspan="2">${v.name}</td></tr>`).join('\n');
+            let field_type_mismatch_msg = "None!";
+            let no_such_field_msg = "None!";
+            if (errors.field_type_mismatch.length > 0) {
+                field_type_mismatch_msg = errors.field_type_mismatch.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
+            }
+            if (errors.no_such_field.length > 0) {
+                no_such_field_msg = errors.no_such_field.map((v) => `<tr><td colspan="2">${v.name}</td></tr>`).join('\n');
+            }
+            let expected_fields_msg = "None!";
+            if (errors.expected_field_errors.length > 0) {
+                expected_fields_msg = errors.expected_field_errors.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
+            }
+
+            document.getElementById('field-type-mismatches').innerHTML = field_type_mismatch_msg;
+            document.getElementById('no-such-fields').innerHTML = no_such_field_msg;
+            document.getElementById('expected-fields').innerHTML = expected_fields_msg;
         }
         window.onload = (_) => {
             load_template_data()
-            reset();
+            document.getElementById('input').value = JSON.stringify({ecs: { version: "1.11.0"}, message: "ECS Validator 1.0"}, null, 2);
             document.getElementById('doc').innerHTML = get_doc();
-            console.log('Template data loaded.')
+            console.log('Template data loaded.');
         }
     </script>
 </head>
@@ -356,14 +378,16 @@
     <tr><td><h2>ECS Validation Tool</h2></td></tr>
     <tr><td>Event data in JSON format:</td></tr>
     <tr style="vertical-align: top">
-        <td><textarea rows="30", cols="100", id="input"></textarea></td>
+        <td>
+            <textarea rows="30", cols="100", id="input"></textarea>
+        </td>
         <td>
             <h3>Field Type Mismatch:</h3>
             <table id="field-type-mismatches"></table>
-            </ul>
             <h3>No Such Field:</h3>
             <table id="no-such-fields"></table>
-            </ul>
+            <h3>Expected Field:</h3>
+            <table id="expected-fields"></table>
         </td>
     </tr>
     <tr>
