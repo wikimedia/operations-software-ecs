@@ -50,13 +50,44 @@
             }
         }
 
-        // Remove dot characters from the left, right, or both ends.
-        function chomp_dots(str, from='both') {
+        // Transforms dot-delimited namespace into nested objects
+        function expand_dots(namespace, value) {
+            const ns = namespace.split('.').reverse();
+            let output = {};
+            output[ns.shift()] = value;
+            for (let k of ns) {
+                let x = {};
+                x[k] = output;
+                output = x;
+            }
+            return output;
+        }
+
+        // Deep merges the source object into destination object
+        function deep_merge(src, dest) {
+            if (get_type(src) === 'object') {
+                for (let [src_key, src_value] of Object.entries(src)) {
+                    if (get_type(dest) === 'object') {
+                        if (dest[src_key] !== undefined) {
+                            dest[src_key] = deep_merge(src_value, dest[src_key]);
+                        } else {
+                            dest[src_key] = structuredClone(src_value);
+                        }
+                    }
+                }
+            } else {
+                dest = src;
+            }
+            return dest;
+        }
+
+        // Remove square bracket characters from the left, right, or both ends.
+        function chomp_brackets(str, from='both') {
             if ( ['left', 'both'].includes(from) ) {
-                if (str[0] === '.') { str = str.slice(1); }
+                if (str[0] === '[') { str = str.slice(1); }
             }
             if ( ['right', 'both'].includes(from) ) {
-                if (str.slice(-1) === '.') { str = str.slice(0, -1); }
+                if (str.slice(-1) === ']') { str = str.slice(0, -1); }
             }
             return str;
         }
@@ -69,9 +100,8 @@
                 if (Object.keys(dt).includes('strings_as_keyword')) { continue; }
                 for (const [_, settings] of Object.entries(dt)) {
                     if (settings.path_match) {
-                        let [parent, child] = settings.path_match.split('*');
-                        parent = chomp_dots(parent, 'right');
-                        child = chomp_dots(child, 'left');
+                        let full_ns = `[${settings.path_match.replaceAll('.', '][')}]`
+                        let [parent, child] = full_ns.split('[*]');
                         output[parent] = { type: settings.mapping.type, child: child };
                     }
                 }
@@ -82,11 +112,7 @@
         // Build up a fully-expanded list of namespaces from the template.
         // Warning: recursive function.
         function get_template_namespaces(template, key='', namespace='', output={}) {
-            if (key.length === 0) {
-                namespace = '';
-            } else {
-                namespace = chomp_dots( `${namespace}.${key}`, 'left');
-            }
+            if (key.length !== 0) { namespace = `${namespace}[${key}]`; }
 
             if (template.properties) {
                 output[namespace] = { type: 'parent', indexed: true };
@@ -115,11 +141,8 @@
         // Build up a list of namespaces from the event.
         // Warning: recursive function.
         function get_namespaces(evt, excluded_namespaces=[], key='', namespace='', output={}) {
-            if (key.length === 0) {
-                namespace = '';
-            } else {
-                namespace = chomp_dots( `${namespace}.${key}`, 'left');
-            }
+            if (key.length !== 0) { namespace = `${namespace}[${key}]`; }
+
             if (excluded_namespaces.includes( namespace )) { return; }
 
             if (get_type(evt) !== 'object') {
@@ -185,8 +208,7 @@
         // Get the object at a provided namespace.
         function get_entity(namespace, o) {
             let output = o;
-
-            const ns = namespace.split('.');
+            const ns = chomp_brackets(namespace).split('][');
             for ( k of ns ) {
                 output = output[k];
                 if (output === undefined) {
@@ -229,12 +251,25 @@
                 .concat(Object.keys(template_geo_points))
                 .concat(Object.keys(template_dates));
 
+            // perform dot-expansion on base-level keys per dot_expander.rb
+            // As of 2025, this is a feature provided by early-stage ECS filters
+            // and is replicated here for behavioral parity
+            let nested = {};
+            for (let [k, v] of Object.entries(event)) {
+                if (!k.includes('.')) { continue; }
+                delete event[k];
+                nested = deep_merge(expand_dots(k, v), nested);
+            }
+            for (let [k, v] of Object.entries(nested)) {
+                event[k] = v;
+            }
+
             const event_namespaces = get_namespaces(event, excluded_namespaces);
 
             // check ecs.version field
-            const ecs_version = get_entity('ecs.version', event);
+            const ecs_version = get_entity('[ecs][version]', event);
             if (ecs_version === undefined) {
-                errors.expected_field_errors.push({name: 'ecs.version', 'msg': 'Expected string, got undefined'});
+                errors.expected_field_errors.push({name: '[ecs][version]', 'msg': 'Expected string, got undefined'});
                 errors.field_type_mismatch.push({name: 'Invalid input', msg: ''});
                 errors.no_such_field.push({name: 'Invalid input', msg: ''});
 
@@ -243,7 +278,7 @@
             const template_ecs_version = template_data.mappings._meta.version;
             if (ecs_version[0] !== template_ecs_version[0]) {
                 errors.expected_field_errors.push({
-                    name: 'ecs.version',
+                    name: '[ecs][version]',
                     'msg': `Warning: ${ecs_version} may use fields not available in ${template_ecs_version}.`
                 });
             }
@@ -254,7 +289,7 @@
                 if (get_type(entity) !== 'object') { continue; }
                 for (let [k, v] of Object.entries(entity)) {
                     if (!is_data_type_correct(v[properties.child], types_map[properties.type])) {
-                        let err = `${template_namespace}.${k}`;
+                        let err = `${template_namespace}[${k}]`;
                         errors.field_type_mismatch.push({ name: err, msg: `Invalid for dynamic template.` });
                         if (event_namespaces[err]) { delete event_namespaces[err]; }
                     }
@@ -270,7 +305,7 @@
                     if (get_type(v) === 'array') {
                         if (v.map((x) => is_data_type_correct(x, types_map['keyword'])).every((x) => x === true)) { continue; }
                     }
-                    let err = `${template_namespace}.${k}`;
+                    let err = `${template_namespace}[${k}]`;
                     errors.field_type_mismatch.push({ name: err, msg: `Expected keyword, got ${get_type(v)}` });
                     if (event_namespaces[err]) { delete event_namespaces[err]; }
                 }
@@ -285,13 +320,13 @@
                 }
                 for (let [k, v] of Object.entries(entity)) {
                     if (!['lat', 'lon'].includes(k)) {
-                        let err = `${template_namespace}.${k}`;
+                        let err = `[${template_namespace}][${k}]`;
                         errors.no_such_field.push({ name: err });
                         if (event_namespaces[err]) { delete event_namespaces[err]; }
                         continue;
                     }
                     if (get_type(v) !== 'float') {
-                        let err = `${template_namespace}.${k}`;
+                        let err = `[${template_namespace}][${k}]`;
                         errors.field_type_mismatch.push({ name: err, msg: `Expected float, got ${get_type(v)}` });
                         if (event_namespaces[err]) { delete event_namespaces[err]; }
                     }
@@ -329,6 +364,7 @@
         function reset() {
             document.getElementById('field-type-mismatches').innerHTML = '<tr><td colspan="2"></td></tr>';
             document.getElementById('no-such-fields').innerHTML = '<tr><td colspan="2"></td></tr>';
+            document.getElementById('expected-fields').innerHTML = '<tr><td colspan="2"></td></tr>';
             document.getElementById('input').value = '';
         }
 
@@ -351,15 +387,15 @@
                 return;
             }
             const errors = get_errors(data);
-            let field_type_mismatch_msg = "None!";
-            let no_such_field_msg = "None!";
+            let field_type_mismatch_msg = "No errors";
+            let no_such_field_msg = "No errors";
             if (errors.field_type_mismatch.length > 0) {
                 field_type_mismatch_msg = errors.field_type_mismatch.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
             }
             if (errors.no_such_field.length > 0) {
                 no_such_field_msg = errors.no_such_field.map((v) => `<tr><td colspan="2">${v.name}</td></tr>`).join('\n');
             }
-            let expected_fields_msg = "None!";
+            let expected_fields_msg = "No errors";
             if (errors.expected_field_errors.length > 0) {
                 expected_fields_msg = errors.expected_field_errors.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
             }
