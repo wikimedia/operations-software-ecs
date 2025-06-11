@@ -240,9 +240,12 @@
 
                 return errors;
             }
-            const major_version = template_data.mappings._meta.version[0];
-            if (ecs_version[0] !== major_version) {
-                errors.expected_field_errors.push({name: 'ecs.version', 'msg': `Expected major version ${major_version}, got ${ecs_version[0]}`});
+            const template_ecs_version = template_data.mappings._meta.version;
+            if (ecs_version[0] !== template_ecs_version[0]) {
+                errors.expected_field_errors.push({
+                    name: 'ecs.version',
+                    'msg': `Warning: ${ecs_version} may use fields not available in ${template_ecs_version}.`
+                });
             }
 
             // handle dynamic template objects
