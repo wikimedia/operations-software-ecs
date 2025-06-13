@@ -236,7 +236,7 @@
         }
 
         function get_errors(event) {
-            const errors = { no_such_field: [], field_type_mismatch: [], expected_field_errors: [] };
+            const errors = { no_such_field: [], field_type_mismatch: [], required_field_errors: [] };
 
             const dynamic_template_objects = get_dynamic_template_namespaces(template_data.mappings.dynamic_templates);
             const template_namespaces = get_template_namespaces(template_data.mappings.properties);
@@ -269,7 +269,7 @@
             // check ecs.version field
             const ecs_version = get_entity('[ecs][version]', event);
             if (ecs_version === undefined) {
-                errors.expected_field_errors.push({name: '[ecs][version]', 'msg': 'Expected string, got undefined'});
+                errors.required_field_errors.push({name: '[ecs][version]', msg: 'Critical Error: Required field.'});
                 errors.field_type_mismatch.push({name: 'Invalid input', msg: ''});
                 errors.no_such_field.push({name: 'Invalid input', msg: ''});
 
@@ -277,10 +277,17 @@
             }
             const template_ecs_version = template_data.mappings._meta.version;
             if (ecs_version[0] !== template_ecs_version[0]) {
-                errors.expected_field_errors.push({
-                    name: '[ecs][version]',
-                    'msg': `Warning: ${ecs_version} may use fields not available in ${template_ecs_version}.`
-                });
+                if (is_data_type_correct(ecs_version, types_map['keyword'])) {
+                    errors.required_field_errors.push({
+                        name: '[ecs][version]',
+                        msg: `Warning: version ${ecs_version} may use fields not available in ${template_ecs_version}.`
+                    });
+                } else {
+                    errors.required_field_errors.push({
+                        name: '[ecs][version]',
+                        msg: 'Critical Error: Event will be dropped due to incompatible data type.'
+                    });
+                }
             }
 
             // handle dynamic template objects
@@ -364,7 +371,7 @@
         function reset() {
             document.getElementById('field-type-mismatches').innerHTML = '<tr><td colspan="2"></td></tr>';
             document.getElementById('no-such-fields').innerHTML = '<tr><td colspan="2"></td></tr>';
-            document.getElementById('expected-fields').innerHTML = '<tr><td colspan="2"></td></tr>';
+            document.getElementById('required-fields').innerHTML = '<tr><td colspan="2"></td></tr>';
             document.getElementById('input').value = '';
         }
 
@@ -395,14 +402,14 @@
             if (errors.no_such_field.length > 0) {
                 no_such_field_msg = errors.no_such_field.map((v) => `<tr><td colspan="2">${v.name}</td></tr>`).join('\n');
             }
-            let expected_fields_msg = "No errors";
-            if (errors.expected_field_errors.length > 0) {
-                expected_fields_msg = errors.expected_field_errors.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
+            let required_fields_msg = "No errors";
+            if (errors.required_field_errors.length > 0) {
+                required_fields_msg = errors.required_field_errors.map((v) => `<tr><td>${v.name}</td><td>${v.msg}</td></tr>`).join('\n');
             }
 
             document.getElementById('field-type-mismatches').innerHTML = field_type_mismatch_msg;
             document.getElementById('no-such-fields').innerHTML = no_such_field_msg;
-            document.getElementById('expected-fields').innerHTML = expected_fields_msg;
+            document.getElementById('required-fields').innerHTML = required_fields_msg;
         }
         window.onload = (_) => {
             load_template_data()
@@ -425,8 +432,8 @@
             <table id="field-type-mismatches"></table>
             <h3>No Such Field:</h3>
             <table id="no-such-fields"></table>
-            <h3>Expected Field:</h3>
-            <table id="expected-fields"></table>
+            <h3>Required Field:</h3>
+            <table id="required-fields"></table>
         </td>
     </tr>
     <tr>
@@ -435,7 +442,33 @@
             <button onclick="reset()">Reset</button>
         </td>
     </tr>
-    <tr><td colspan="2" id="doc"></td></tr>
+    <tr>
+        <td style="vertical-align: top">
+            <table>
+                <tr>
+                    <td><h3>OpenSearch -&gt; JS Data Type Mapping</h3></td>
+                </tr>
+                <tr>
+                    <td id="doc"></td>
+                </tr>
+            </table>
+        </td>
+        <td style="vertical-align: top">
+            <table>
+                <tr>
+                    <td><h3>Notes on ECS Pipeline Behavior</h3></td>
+                </tr>
+                <tr>
+                    <td>
+                        <ul>
+                            <li>Most <b>Field Type Mismatch</b> and <b>No Such Field</b> errors will result in the compatible fields stored and the incompatible fields removed.</li>
+                            <li>If [ecs][version] does not match the current WMF ECS version, a warning will be shown.  This will not prevent log events from being stored correctly, but is a warning indicating there may be field incompatibilities in later versions.  Check the <a href="/ecs">WMF ECS docs</a> for the most up-to-date documentation.</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
     <tr><td colspan="2">Please report bugs to the SRE Observability Team on <a href="https://phabricator.wikimedia.org/project/profile/5391/">Phabricator</a>.</td></tr>
 </table>
 </body>
