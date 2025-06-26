@@ -30,6 +30,9 @@
             if (entity === undefined) {
                 return 'undefined';
             }
+            if (entity === null) {
+                return 'null';
+            }
             if (typeof entity === 'object') {
                 if (Array.isArray(entity)) {
                     return 'array';
