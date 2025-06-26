@@ -364,6 +364,13 @@
                     errors.no_such_field.push({ name: namespace });
                     continue;
                 }
+                // keyword type supports an array of strings - don't reject these
+                if (t === 'array' && properties['type'] === 'keyword') {
+                    if (!get_entity(namespace, event).map((x) => is_data_type_correct(x, types_map[properties['type']])).every((x) => x === true)) {
+                        errors.field_type_mismatch.push({ name: namespace, msg: `Expected all array values to be string`})
+                    }
+                    continue;
+                }
                 if (!types_map[properties['type']].includes(t)) {
                     errors.field_type_mismatch.push({ name: namespace, msg: `Expected ${properties['type']}, got ${t}` });
                 }
