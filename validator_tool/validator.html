@@ -13,13 +13,13 @@
             text:         [ 'string', ],
             object:       [ 'object' ],
             boolean:      [ 'boolean' ],
-            float:        [ 'float' ],
+            float:        [ 'float', 'integer' ],
             geo_point:    [ 'object' ],
-            half_float:   [ 'float' ],
+            half_float:   [ 'float', 'integer' ],
             integer:      [ 'integer' ],
             ip:           [ 'string' ],
             long:         [ 'integer' ],
-            scaled_float: [ 'float' ],
+            scaled_float: [ 'float', 'integer' ],
             // Non-OpenSearch data type indicating a namespace that is included in the fully-expanded template mapping.
             // See: get_template_namespaces()
             parent:       [ 'object' ]
@@ -45,8 +45,15 @@
             if (typeof entity === 'boolean') {
                 return 'boolean';
             }
-            if (!isNaN(parseFloat(entity))) {
-                return 'float';
+            // In JS, we can only detect a float when the right side
+            // of the decimal is greater than 0.
+            // To support practically accurate results, this tool
+            // compromises and allows float types to accept
+            // integer values in the types_map.
+            if (entity.toString().includes('.')) {
+                if (!isNaN(parseFloat(entity))) {
+                    return 'float';
+                }
             }
             if (!isNaN(parseInt(entity))) {
                 return 'integer';
