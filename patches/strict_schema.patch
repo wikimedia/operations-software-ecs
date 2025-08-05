@@ -1,0 +1,33 @@
+diff --git a/docs/using-custom-fields.asciidoc b/docs/using-custom-fields.asciidoc
+index 897436e..03b8abb 100644
+--- a/docs/using-custom-fields.asciidoc
++++ b/docs/using-custom-fields.asciidoc
+@@ -8,12 +8,7 @@ However, ECS does not define anything about custom fields. By definition, they
+ are additional fields, exactly as the user or the integration defines them,
+ independently of ECS.
+ 
+-Users and integrations are welcome to capture additional
+-information in their events, as custom fields.
+-This flexibility is by design, and ensures that no one is ever blocked by
+-something not being supported by ECS yet.
+-
+-ECS is under active development, however. Adding custom fields carries a small
++ECS is under active development, however. Adding custom fields carries the
+ risk of conflicting with a future ECS field.
+ There are ways of modeling custom fields that will lead to
+ lower chances of conflict with future versions of ECS.
+diff --git a/scripts/templates/index.j2 b/scripts/templates/index.j2
+index a354b5c..b38a33d 100644
+--- a/scripts/templates/index.j2
++++ b/scripts/templates/index.j2
+@@ -45,8 +45,8 @@ core concepts, <<ecs-getting-started>> is a great place to start.
+ [float]
+ === My events don't map with ECS
+ 
+-ECS is a permissive schema. If your events have additional data that cannot be
+-mapped to ECS, you can simply add them to your events, using custom field names.
++Wikimedia's implementation of ECS is a strict schema. If your events have additional data that cannot be
++mapped to ECS, custom field names can be added by patching the schema.
+ 
+ 
+ [float]
