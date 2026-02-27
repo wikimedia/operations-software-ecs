@@ -479,6 +479,7 @@
                     <td>
                         <ul>
                             <li>Most <b>Field Type Mismatch</b> and <b>No Such Field</b> errors will result in the compatible fields stored and the incompatible fields removed.</li>
+                            <li>Root fields containing a period character ('.') will be expanded to nested objects by dot_expander.rb.  A log event containing both nested and dot-delimited root fields is supported.</li>
                             <li>If [ecs][version] does not match the current WMF ECS version, a warning will be shown.  This will not prevent log events from being stored correctly, but is a warning indicating there may be field incompatibilities in later versions.  Check the <a href="/ecs">WMF ECS docs</a> for the most up-to-date documentation.</li>
                         </ul>
                     </td>
