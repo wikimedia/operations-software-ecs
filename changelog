@@ -1,3 +1,10 @@
+ecs (1.11.0-8) wikimedia; urgency=medium
+
+  * Add initial set of query fields
+  * Add unknown_data_type to normalized.dropped fields
+
+ -- Cole White <cwhite@wikimedia.org>  Thu, 30 Apr 2026 21:52:01 +0000
+
 ecs (1.11.0-7) wikimedia; urgency=medium
 
   * Backport orchestrator fields from ECS 8.8

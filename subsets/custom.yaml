@@ -8,3 +8,5 @@ fields:
     fields: '*'
   normalized:
     fields: '*'
+  query:
+    fields: '*'

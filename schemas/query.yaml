@@ -1,0 +1,44 @@
+- name: query
+  title: Query
+  group: 2
+  short: Fields for database queries and query attributes.
+  description: >
+    Fields about database queries or specific attributes associated with database queries.
+
+  type: group
+  fields:
+    - name: text
+      level: custom
+      type: keyword
+      index: false
+      example: "SELECT * from table ORDER BY timestamp DESC;"
+      short: The query text submitted to the database engine.
+      description: >
+        The query text submitted to the database engine.
+        
+        This field is not indexed and doc_values are disabled.
+        It cannot be searched, but it can be retrieved from `_source`.
+      ignore_above: 256
+    - name: span.start
+      level: custom
+      type: date
+      short: The query timestamp marking the earliest bound of the database query.
+      description: >
+        The query timestamp in date format marking the earliest bound of the database query.
+        
+        Equivalent to the earliest date in a SQL BETWEEN clause.
+    - name: span.end
+      level: custom
+      type: date
+      short: The query timestamp marking the latest bound of the database query.
+      description: >
+        The query timestamp in date format marking the latest bound of the database query.
+
+        Equivalent to the latest date in a SQL BETWEEN clause.  When there is no upper bound, the 
+        timestamp of the event is acceptable.
+    - name: span.total
+      level: custom
+      type: float
+      short: The difference between query.span.start and query.span.end in seconds.
+      description: >
+        The difference between query.span.start and query.span.end in seconds.
