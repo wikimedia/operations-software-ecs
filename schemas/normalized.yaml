@@ -40,3 +40,12 @@
         Array of dropped field names due to a type conflict.
 
         Values in this field are the equivalent of those in error type `mapper_parsing_exception`.
+    - name: dropped.unknown_data_type
+      level: custom
+      type: keyword
+      example: '[field_name][subfield_name]<foo_type>'
+      short: Array of fields dropped because the schema enforcement filter does not support it.
+      description: >
+        Array of fields dropped because the schema enforcement filter does not support it.
+
+        Values in this field would have otherwise caused a _rubyexception in the pipeline itself.
